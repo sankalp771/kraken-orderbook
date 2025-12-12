@@ -1,0 +1,80 @@
+.orderbook-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    padding: 2px 8px;
+    font-family: 'Roboto Mono', monospace;
+    font-size: 0.85rem;
+    position: relative;
+    cursor: default;
+    transition: background-color 0.15s ease;
+}
+
+.orderbook-row:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.orderbook-row.flash-update {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.heatmap-bar {
+    position: absolute;
+    top: 0;
+    right: 0;
+    /* Ask grows from right usually, actually standard is depth chart style. Let's do right align for table */
+    bottom: 0;
+    z-index: 0;
+    opacity: 0.15;
+    transition: width 0.2s ease-out;
+}
+
+/* Specific side styling */
+.side-bid .heatmap-bar {
+    background-color: #00e676;
+    /* Green */
+    right: 0;
+    left: auto;
+}
+
+.side-ask .heatmap-bar {
+    background-color: #ff5252;
+    /* Red */
+    right: 0;
+    left: auto;
+}
+
+.price-cell {
+    z-index: 1;
+    font-weight: 600;
+}
+
+.side-bid .price-cell {
+    color: #00e676;
+}
+
+.side-ask .price-cell {
+    color: #ff5252;
+}
+
+.vol-cell {
+    z-index: 1;
+    text-align: right;
+    color: #b0bec5;
+}
+
+.total-cell {
+    z-index: 1;
+    text-align: right;
+    color: #78909c;
+}
+
+/* Spread indicator */
+.spread-container {
+    text-align: center;
+    padding: 8px 0;
+    background: #1e1e1e;
+    font-size: 0.9rem;
+    color: #90a4ae;
+    border-top: 1px solid #333;
+    border-bottom: 1px solid #333;
+}
