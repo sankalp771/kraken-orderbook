@@ -73,16 +73,16 @@ const TradesPanel: React.FC = () => {
                 {trades.map((trade) => (
                     <div
                         key={trade.id}
-                        className="grid grid-cols-3 gap-4 px-3 py-0.5 text-[10px] hover:bg-[#15181c] transition-colors border-b border-[#15181c] leading-tight"
+                        className="grid grid-cols-3 gap-4 px-3 py-[1px] text-[10px] hover:bg-[#15181c] transition-colors leading-none"
                     >
-                        <div className={`text-left font-medium ${trade.side === 'buy' ? 'text-[#00e676]' : 'text-[#ff5252]'
+                        <div className={`text-left font-bold ${trade.side === 'buy' ? 'text-[#00e676]' : 'text-[#ff5252]'
                             }`}>
                             {trade.price.toFixed(1)}
                         </div>
-                        <div className="text-right text-gray-300">
+                        <div className="text-right text-gray-400">
                             {trade.size.toFixed(4)}
                         </div>
-                        <div className="text-right text-gray-500 text-[9px] opacity-70">
+                        <div className="text-right text-gray-600 text-[9px] opacity-60 font-medium">
                             {trade.time}
                         </div>
                     </div>

@@ -35,41 +35,23 @@ const TimeTravelSlider: React.FC = () => {
         const diffMs = latestTime - currentTime;
 
         if (diffMs > 0) {
-            timeLabel = `${(diffMs / 1000).toFixed(1)}s ago`;
+            timeLabel = `-${(diffMs / 1000).toFixed(1)}s`;
         } else {
-            timeLabel = '0.0s ago';
+            timeLabel = '0.0s';
         }
     }
 
     return (
-        <div className="flex flex-col w-[300px] select-none mx-4">
-            <div className="flex items-center justify-between mb-1.5 h-4">
-                <div className="flex items-center gap-2">
-                    <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded leading-none ${isHistoryMode ? 'bg-[#ff9800] text-black' : 'bg-[#00e676] text-black'}`}>
-                        {isHistoryMode ? 'HISTORY' : 'LIVE'}
-                    </span>
-                    {isHistoryMode && (
-                        <span className="text-[9px] text-[#ff9800] font-mono leading-none">
-                            {timeLabel}
-                        </span>
-                    )}
-                </div>
-
-                {isHistoryMode && (
-                    <button
-                        onClick={handleJumpToLive}
-                        className="text-[9px] bg-white/10 hover:bg-white/20 text-white px-1.5 py-[2px] rounded transition-colors uppercase tracking-wider leading-none"
-                    >
-                        Jump to Live
-                    </button>
-                )}
+        <div className="flex items-center w-full px-4 py-2 select-none h-10 gap-4">
+            {/* Label */}
+            <div className="flex items-center gap-2 flex-shrink-0">
+                <span className="text-[#6b7280] text-[10px] font-bold tracking-[0.2em] uppercase">Time Travel</span>
             </div>
 
-            <div className="relative h-4 flex items-center group">
+            {/* Slider Track */}
+            <div className="flex-1 relative h-4 flex items-center group">
                 {/* Track Background */}
-                <div className="absolute inset-x-0 h-0.5 bg-white/10 rounded-full overflow-hidden group-hover:bg-white/20 transition-colors">
-                    {/* Can indicate buffered amount here if needed, but buffer is implicit */}
-                </div>
+                <div className="absolute inset-x-0 h-0.5 bg-white/10 rounded-full overflow-hidden group-hover:bg-white/20 transition-colors"></div>
 
                 {/* Range Input */}
                 <input
@@ -78,16 +60,47 @@ const TimeTravelSlider: React.FC = () => {
                     max={maxIndex}
                     value={sliderValue}
                     onChange={handleChange}
-                    className="w-full h-4 bg-transparent appearance-none cursor-pointer z-10 block focus:outline-none
-                               [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-2.5 [&::-webkit-slider-thumb]:w-2.5 
+                    className={`w-full h-4 bg-transparent appearance-none cursor-pointer z-10 block focus:outline-none
+                               [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:w-3 
                                [&::-webkit-slider-thumb]:rounded-full 
-                               [&::-webkit-slider-thumb]:bg-white 
-                               [&::-webkit-slider-thumb]:border-0
-                               [&::-webkit-slider-thumb]:shadow-[0_0_5px_rgba(0,0,0,0.5)]
+                               [&::-webkit-slider-thumb]:border-2 
+                               [&::-webkit-slider-thumb]:shadow-[0_0_0_2px_rgba(0,0,0,0.5)]
                                [&::-webkit-slider-thumb]:transition-transform
                                [&::-webkit-slider-thumb]:hover:scale-125
-                               "
+                               ${isHistoryMode
+                            ? '[&::-webkit-slider-thumb]:bg-[#ff9800] [&::-webkit-slider-thumb]:border-[#ff9800]/50'
+                            : '[&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:border-[#161616]'
+                        }`}
                 />
+
+                {/* Ticks/Labels */}
+                <div className="absolute top-5 left-0 right-0 flex justify-between px-1 pointer-events-none opacity-40">
+                    <span className="text-[8px] font-mono text-gray-500">HISTORY</span>
+                    <span className="text-[8px] font-mono text-gray-500">-1m</span>
+                    <span className="text-[8px] font-mono text-gray-500">-30s</span>
+                    <span className="text-[8px] font-mono text-gray-500">-10s</span>
+                    <span className="text-[8px] font-bold text-[#00e676]">LIVE</span>
+                </div>
+            </div>
+
+            {/* Controls / Status */}
+            <div className="flex items-center gap-3 flex-shrink-0 min-w-[140px] justify-end">
+                {isHistoryMode ? (
+                    <>
+                        <span className="text-[#ff9800] text-[10px] font-mono">{timeLabel}</span>
+                        <button
+                            onClick={handleJumpToLive}
+                            className="bg-white/10 hover:bg-white/20 text-white text-[9px] font-bold px-2 py-1 rounded transition-colors uppercase tracking-wider"
+                        >
+                            Jump to Live
+                        </button>
+                    </>
+                ) : (
+                    <div className="flex items-center gap-1.5 px-2 py-0.5 bg-[#00e676]/10 border border-[#00e676]/20 rounded text-[#00e676]">
+                        <div className="w-1.5 h-1.5 rounded-full bg-[#00e676] animate-pulse" />
+                        <span className="text-[9px] font-bold uppercase tracking-wider">Live View</span>
+                    </div>
+                )}
             </div>
         </div>
     );
