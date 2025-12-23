@@ -18,14 +18,14 @@ type Trade = {
 import { useOrderbookStore } from '@/store/orderbook-store';
 
 const TradeList = memo(() => {
-    const latestTick = useOrderbookStore(state => state.latestTick);
+    const latestSnapshot = useOrderbookStore(state => state.latestSnapshot);
     const [trades, setTrades] = useState<Trade[]>([]);
     const lastPriceRef = useRef<number>(0);
 
     useEffect(() => {
-        if (!latestTick) return;
+        if (!latestSnapshot) return;
 
-        const currentPrice = latestTick.lastPrice;
+        const currentPrice = latestSnapshot.lastPrice;
 
         // Detect price change to generate a pseudo-trade
         if (currentPrice !== lastPriceRef.current && lastPriceRef.current !== 0) {
@@ -44,7 +44,7 @@ const TradeList = memo(() => {
         }
 
         lastPriceRef.current = currentPrice;
-    }, [latestTick]); // Only depend on latestTick, not lastPriceRef
+    }, [latestSnapshot]); // Only depend on latestSnapshot, not lastPriceRef
 
     return (
         <div className="flex flex-col flex-1 h-full bg-[#121212] text-[11px] font-mono">

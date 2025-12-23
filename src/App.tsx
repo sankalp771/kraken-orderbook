@@ -3,9 +3,9 @@ import { useOrderbookWorker } from '@/hooks/useOrderbookWorker';
 import { useOrderbookStore } from '@/store/orderbook-store';
 import Layout from '@/components/Layout/Layout';
 import Header from '@/components/Layout/Header';
-import OrderbookTable from '@/components/orderbook/OrderbookTable';
+import OrderbookTable from '@/components/OrderBook/OrderBookTable';
 import DepthChart from '@/components/charts/DepthChart';
-import TradesPanel from '@/components/trades/TradesPanel';
+import TradesPanel from '@/components/Trades/TradesPanel';
 
 import TimeTravelSlider from '@/components/Layout/TimeTravelSlider';
 

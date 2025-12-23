@@ -1,7 +1,7 @@
 
 import React, { useMemo, useState } from 'react';
 import { useOrderbookStore } from '@/store/orderbook-store';
-import OrderbookRow from './OrderbookRow';
+import OrderBookRow from './OrderBookRow';
 import '@/styles/orderbook.css';
 
 
@@ -85,7 +85,7 @@ const OrderbookTable: React.FC = () => {
                     {(viewMode === 'combined' || viewMode === 'asks') && (
                         <div className={`flex ${viewMode === 'combined' ? 'flex-col-reverse' : 'flex-col'}`}>
                             {asks.map((level, idx) => (
-                                <OrderbookRow
+                                <OrderBookRow
                                     key={`ask-${level.price}-${idx}`}
                                     level={level}
                                     side="ask"
@@ -107,7 +107,7 @@ const OrderbookTable: React.FC = () => {
                     {(viewMode === 'combined' || viewMode === 'bids') && (
                         <div className="flex flex-col">
                             {bids.map((level, idx) => (
-                                <OrderbookRow
+                                <OrderBookRow
                                     key={`bid-${level.price}-${idx}`}
                                     level={level}
                                     side="bid"

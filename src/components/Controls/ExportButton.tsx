@@ -2,11 +2,11 @@ import { exportStateToJSON } from '@/utils/export';
 import { useOrderbookStore } from '@/store/orderbook-store';
 
 export default function ExportButton() {
-    const latestTick = useOrderbookStore(state => state.latestTick);
+    const latestSnapshot = useOrderbookStore(state => state.latestSnapshot);
 
     const handleExport = () => {
-        if (latestTick) {
-            exportStateToJSON(latestTick);
+        if (latestSnapshot) {
+            exportStateToJSON(latestSnapshot);
         }
     };
 

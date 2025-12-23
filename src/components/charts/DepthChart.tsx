@@ -18,7 +18,7 @@ const DepthChart: React.FC = () => {
         const sortedBids = [...bids].sort((a, b) => b.price - a.price);
         let currentBidVol = 0;
         const bidSeriesData = sortedBids.map(order => {
-            currentBidVol += (order.volume || order.size || 0);
+            currentBidVol += (order.volume || 0);
             return [order.price, currentBidVol];
         });
         const viewBids = bidSeriesData.slice(0, LEVELS_TO_SHOW).reverse();
@@ -27,7 +27,7 @@ const DepthChart: React.FC = () => {
         const sortedAsks = [...asks].sort((a, b) => a.price - b.price);
         let currentAskVol = 0;
         const askSeriesData = sortedAsks.map(order => {
-            currentAskVol += (order.volume || order.size || 0);
+            currentAskVol += (order.volume || 0);
             return [order.price, currentAskVol];
         });
         const viewAsks = askSeriesData.slice(0, LEVELS_TO_SHOW);

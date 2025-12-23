@@ -4,7 +4,7 @@ import { WebSocketService } from '@/services/websocket';
 import { SnapshotManager } from '@/services/snapshot-manager';
 import { RateLimiter } from '@/utils/throttle';
 
-const ctx: Worker = self as any;
+const ctx = self as any;
 
 const engine = new OrderbookEngine();
 const snapshotManager = new SnapshotManager();
@@ -80,19 +80,19 @@ const tickLoop = () => {
         ctx.postMessage(message);
     }
 
-    requestAnimationFrame(tickLoop);
+    setTimeout(tickLoop, 16);
 };
 
 ctx.onmessage = (event: MessageEvent<WorkerMessage>) => {
-    const { type, payload } = event.data;
+    const msg = event.data;
 
-    switch (type) {
+    switch (msg.type) {
         case 'INIT_CONNECTION':
             isReady = false; // Reset ready state
             engine.clear();
             // Kraken V2 WS URL
             const KRAKEN_WS_URL = 'wss://ws.kraken.com/v2';
-            wsService.connect({ url: KRAKEN_WS_URL, symbol: payload.symbol }, payload.useSimulated);
+            wsService.connect({ url: KRAKEN_WS_URL, symbol: msg.payload.symbol }, msg.payload.useSimulated);
             break;
 
         case 'STOP_CONNECTION':
@@ -102,13 +102,13 @@ ctx.onmessage = (event: MessageEvent<WorkerMessage>) => {
 
         case 'SET_THROTTLE_MS':
             // @ts-ignore
-            rateLimiter.setInterval(payload);
+            rateLimiter.setInterval(msg.payload);
             break;
 
         case 'REQUEST_SNAPSHOT':
             // Handle time travel request
-            if (payload.timestamp) {
-                const hist = snapshotManager.getAtTime(payload.timestamp);
+            if (msg.payload.timestamp) {
+                const hist = snapshotManager.getAtTime(msg.payload.timestamp);
                 if (hist) {
                     // Determine if we need a separate message type or just TICK
                     // Usually for time travel you pause live updates.
