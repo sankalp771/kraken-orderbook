@@ -1,3 +1,4 @@
+
 import React, { useMemo } from 'react';
 import { useOrderbookStore } from '@/store/orderbook-store';
 import OrderbookRow from './OrderbookRow';
@@ -12,7 +13,7 @@ const OrderbookTable: React.FC = () => {
             return { asks: [], bids: [], spread: 0, spreadPercent: 0 };
         }
 
-        const MAX_LEVELS = 15; // Show only what fits without scrolling
+        const MAX_LEVELS = 100; // Allow more levels for scrolling
 
         return {
             asks: snapshot.asks.slice(0, MAX_LEVELS).reverse(),
@@ -24,53 +25,52 @@ const OrderbookTable: React.FC = () => {
 
     if (!snapshot) {
         return (
-            <div className="orderbook-container">
-                <div className="flex items-center justify-center h-full text-gray-500 text-sm">
-                    Connecting...
-                </div>
+            <div className="flex items-center justify-center h-full text-gray-500 text-xs">
+                Connecting...
             </div>
         );
     }
 
     return (
-        <div className="orderbook-container">
+        <div className="h-full flex flex-col bg-[#0b0e11] text-xs">
             {/* Header */}
-            <div className="orderbook-header">
-                <div className="orderbook-header-col">Price</div>
-                <div className="orderbook-header-col">Size</div>
-                <div className="orderbook-header-col">Total</div>
+            <div className="grid grid-cols-3 px-2 py-1.5 border-b border-[#2a2a2a] text-[#6b7280] font-medium text-[10px] uppercase tracking-wider bg-[#0b0e11] flex-shrink-0 z-10">
+                <div className="text-left">Price</div>
+                <div className="text-right">Size</div>
+                <div className="text-right">Total</div>
             </div>
 
-            <div className="orderbook-content">
-                {/* Asks (Red) */}
-                <div className="orderbook-asks-section">
-                    {asks.map((level, idx) => (
-                        <OrderbookRow
-                            key={`ask-${level.price}-${idx}`}
-                            level={level}
-                            side="ask"
-                        />
-                    ))}
-                </div>
+            {/* Scrollable Content */}
+            <div className="flex-1 overflow-y-auto min-h-0 custom-scrollbar relative">
+                <div className="flex flex-col">
+                    {/* Asks (Red) - Reverse Order (High -> Low) */}
+                    <div className="flex flex-col-reverse">
+                        {asks.map((level, idx) => (
+                            <OrderbookRow
+                                key={`ask-${level.price}-${idx}`}
+                                level={level}
+                                side="ask"
+                            />
+                        ))}
+                    </div>
 
-                {/* Spread */}
-                <div className="orderbook-spread">
-                    <span className="spread-label">Spread</span>
-                    <span className="spread-value">
-                        {spread.toFixed(1)}
-                        <span className="spread-percent ml-1">({spreadPercent.toFixed(2)}%)</span>
-                    </span>
-                </div>
+                    {/* Spread */}
+                    <div className="py-1 my-1 border-y border-[#1e2329] bg-[#161a1e] flex justify-center items-center gap-2 font-mono text-gray-400 sticky top-0 z-0 opacity-90 backdrop-blur-sm">
+                        <span className="text-[10px] uppercase tracking-wider text-gray-500">Spread</span>
+                        <span className="font-bold text-white">{spread.toFixed(1)}</span>
+                        <span className="text-[10px] text-gray-500">({spreadPercent.toFixed(2)}%)</span>
+                    </div>
 
-                {/* Bids (Green) */}
-                <div className="orderbook-bids-section">
-                    {bids.map((level, idx) => (
-                        <OrderbookRow
-                            key={`bid-${level.price}-${idx}`}
-                            level={level}
-                            side="bid"
-                        />
-                    ))}
+                    {/* Bids (Green) - Normal Order (High -> Low) */}
+                    <div className="flex flex-col">
+                        {bids.map((level, idx) => (
+                            <OrderbookRow
+                                key={`bid-${level.price}-${idx}`}
+                                level={level}
+                                side="bid"
+                            />
+                        ))}
+                    </div>
                 </div>
             </div>
         </div>

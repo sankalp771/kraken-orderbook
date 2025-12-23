@@ -14,17 +14,20 @@ const OrderbookRow: React.FC<OrderbookRowProps> = ({ level, side }) => {
     const formatTotal = (t: number) => t.toFixed(2);
 
     return (
-        <div
-            className={`orderbook-row ${side}`}
-            style={{ '--depth-width': `${level.depthRatio * 100}%` } as React.CSSProperties}
-        >
-            <div className={`orderbook-cell price-${side}`}>
+        <div className="relative grid grid-cols-3 px-2 py-0.5 text-[10px] font-mono leading-4 hover:bg-[#1e2329] select-none text-gray-300">
+            {/* Depth Visualization Background */}
+            <div
+                className={`absolute top-0 bottom-0 pointer-events-none opacity-20 ${side === 'bid' ? 'bg-[#00e676] right-0' : 'bg-[#ff5252] right-0'}`}
+                style={{ width: `${level.depthRatio * 100}%` }}
+            />
+
+            <div className={`z-10 text-left ${side === 'bid' ? 'text-[#00e676]' : 'text-[#ff5252]'}`}>
                 {formatPrice(level.price)}
             </div>
-            <div className="orderbook-cell size">
+            <div className="z-10 text-right">
                 {formatVolume(level.volume)}
             </div>
-            <div className="orderbook-cell total">
+            <div className="z-10 text-right text-gray-500">
                 {formatTotal(level.total)}
             </div>
         </div>

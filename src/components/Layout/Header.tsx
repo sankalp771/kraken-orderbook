@@ -1,6 +1,5 @@
 import React, { useCallback } from 'react';
 import { useOrderbookStore } from '@/store/orderbook-store';
-import TimeTravelSlider from './TimeTravelSlider';
 
 const SYMBOLS = ['BTC/USD', 'ETH/USD', 'SOL/USD', 'XRP/USD'];
 
@@ -33,11 +32,6 @@ const Header: React.FC = () => {
                         <option key={symbol} value={symbol}>{symbol}</option>
                     ))}
                 </select>
-            </div>
-
-            {/* Center: Time Travel Slider */}
-            <div className="flex-1 flex justify-center">
-                <TimeTravelSlider />
             </div>
 
             {/* Right: Connection Status */}

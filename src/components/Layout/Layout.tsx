@@ -1,52 +1,47 @@
 import React from 'react';
+import Panel from '@/components/common/Panel';
 
 interface LayoutProps {
     header: React.ReactNode;
+    timeTravel: React.ReactNode;
     orderbook: React.ReactNode;
     chart: React.ReactNode;
     trades: React.ReactNode;
 }
 
-const Layout: React.FC<LayoutProps> = ({ header, orderbook, chart, trades }) => {
+const Layout: React.FC<LayoutProps> = ({ header, timeTravel, orderbook, chart, trades }) => {
     return (
-        <div className="h-screen w-screen flex flex-col bg-black text-white overflow-hidden">
+        <div className="h-screen w-screen flex flex-col bg-[#000000] text-white overflow-hidden font-sans">
             {/* Header */}
-            <div className="h-14 flex-shrink-0 border-b border-[#2a2a2a] bg-[#0b0e11]">
+            <div className="flex-shrink-0 z-50">
                 {header}
             </div>
 
-            {/* Main Content */}
-            <div className="flex-1 flex flex-col min-h-0">
+            {/* Time Travel Bar */}
+            <div className="flex-shrink-0 border-b border-[#1e2329] bg-[#0b0e11] py-1">
+                {timeTravel}
+            </div>
 
-                {/* TOP: CHART (60% Height) */}
-                <div className="flex-[3] min-h-0 border-b border-[#2a2a2a] bg-[#0b0e11] w-full relative">
-                    {chart}
+            {/* Main Content Grid */}
+            <div className="flex-1 flex flex-col p-2 gap-2 min-h-0">
+
+                {/* Top Row: Orderbook + Chart */}
+                <div className="flex-1 flex gap-2 min-h-0">
+                    {/* Orderbook Panel */}
+                    <Panel title="Order Book" className="w-[320px] flex-shrink-0">
+                        {orderbook}
+                    </Panel>
+
+                    {/* Chart Panel */}
+                    <Panel title="Market Depth" className="flex-1">
+                        {chart}
+                    </Panel>
                 </div>
 
-                {/* BOTTOM: DATA TABLES (40% Height) - FORCED SIDE-BY-SIDE */}
-                <div className="flex-[2] min-h-0 flex flex-row w-full bg-[#0b0e11]">
-
-                    {/* Bottom Left: Orderbook (50% Width) */}
-                    <div className="w-1/2 border-r border-[#2a2a2a] flex flex-col min-h-0">
-                        <div className="flex-shrink-0 px-3 py-2 border-b border-[#2a2a2a] bg-[#161a1e] text-xs font-medium text-gray-400 uppercase tracking-wider">
-                            Order Book
-                        </div>
-                        <div className="flex-1 overflow-y-auto overflow-x-hidden relative">
-                            {orderbook}
-                        </div>
-                    </div>
-
-                    {/* Bottom Right: Trades (50% Width) */}
-                    <div className="w-1/2 flex flex-col min-h-0">
-                        <div className="flex-shrink-0 px-3 py-2 border-b border-[#2a2a2a] bg-[#161a1e] text-xs font-medium text-gray-400 uppercase tracking-wider">
-                            Recent Trades
-                        </div>
-                        <div className="flex-1 overflow-y-auto overflow-x-hidden relative">
-                            {trades}
-                        </div>
-                    </div>
-
-                </div>
+                {/* Bottom Row: Trades */}
+                <Panel title="Recent Trades" className="h-[220px] flex-shrink-0">
+                    {trades}
+                </Panel>
 
             </div>
         </div>
