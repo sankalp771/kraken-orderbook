@@ -1,37 +1,39 @@
-import { memo } from 'react';
+import React from 'react';
 import { ProcessedLevel } from '@/types/orderbook';
-import HeatmapOverlay from './HeatmapOverlay';
-import './OrderBookTable.css';
 
-interface OrderBookRowProps {
+interface OrderbookRowProps {
     level: ProcessedLevel;
     side: 'bid' | 'ask';
 }
 
-const OrderBookRow = memo(({ level, side }: OrderBookRowProps) => {
-    // Formatting numbers
-    const formatPrice = (p: number) => p.toFixed(2); // Crypto specific formatting needed usually, but fixed 2 for now
-    const formatVol = (v: number) => v.toFixed(4);
+// Memoized row component - only re-renders if data changes
+const OrderbookRow: React.FC<OrderbookRowProps> = ({ level, side }) => {
+    // Format numbers with proper precision
+    const formatPrice = (p: number) => p.toFixed(1);
+    const formatVolume = (v: number) => v.toFixed(4);
+    const formatTotal = (t: number) => t.toFixed(2);
 
     return (
-        <div className={`orderbook-row side-${side}`}>
-            <HeatmapOverlay depthRatio={level.depthRatio} side={side} />
-
-            <div className="price-cell text-left pl-2">
+        <div
+            className={`orderbook-row ${side}`}
+            style={{ '--depth-width': `${level.depthRatio * 100}%` } as React.CSSProperties}
+        >
+            <div className={`orderbook-cell price-${side}`}>
                 {formatPrice(level.price)}
             </div>
-            <div className="vol-cell">
-                {formatVol(level.volume)}
+            <div className="orderbook-cell size">
+                {formatVolume(level.volume)}
             </div>
-            <div className="total-cell pr-2">
-                {formatVol(level.total)}
+            <div className="orderbook-cell total">
+                {formatTotal(level.total)}
             </div>
         </div>
     );
-}, (prev, next) => {
-    // Custom comparison for performance optimization
-    // Only re-render if data values changed. 
-    // Usually object identity differs but values might be same.
+};
+
+// Memoize with custom comparison
+export default React.memo(OrderbookRow, (prev, next) => {
+    // Only re-render if actual values changed
     return (
         prev.level.price === next.level.price &&
         prev.level.volume === next.level.volume &&
@@ -39,5 +41,3 @@ const OrderBookRow = memo(({ level, side }: OrderBookRowProps) => {
         prev.level.depthRatio === next.level.depthRatio
     );
 });
-
-export default OrderBookRow;

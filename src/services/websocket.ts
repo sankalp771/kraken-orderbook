@@ -1,6 +1,3 @@
-import { WSConfig } from '@/services/websocket'; // Note: circular if I import type from class file, better to keep types separate but it's ok for now.
-// Better to define WSConfig in types or keep it locally if not shared much.
-
 export type WSCallback = (data: any) => void;
 
 export class WebSocketService {
@@ -34,11 +31,11 @@ export class WebSocketService {
     }
 
     private startRealConnection(config: { url: string, symbol: string }) {
-        console.log(`[WS] Connecting to ${config.url}`);
+        console.log(`[WS] Connecting to ${config.url} for symbol ${config.symbol}`);
         this.ws = new WebSocket(config.url);
 
         this.ws.onopen = () => {
-            console.log('[WS] Connected');
+            console.log('[WS] Connected successfully!');
             this.subscribe(config.symbol);
             this.startHeartbeat();
         };
@@ -46,44 +43,49 @@ export class WebSocketService {
         this.ws.onmessage = (event) => {
             try {
                 const data = JSON.parse(event.data);
+                console.log('[WS] <<< Received:', data);
                 this.onMessageCallback(data);
             } catch (e) {
-                console.error('[WS] Parse error', e);
+                console.error('[WS] Parse error', e, 'Raw:', event.data);
             }
         };
 
-        this.ws.onclose = () => {
-            console.log('[WS] Closed');
+        this.ws.onclose = (event) => {
+            console.log(`[WS] Closed! Code: ${event.code}, Reason: "${event.reason || 'none'}", Clean: ${event.wasClean}`);
             this.stopHeartbeat();
             if (this.shouldReconnect) {
-                console.log('[WS] Reconnecting in 2s...');
-                this.reconnectTimeout = setTimeout(() => this.startRealConnection(config), 2000); // Simple linear backoff for now
+                console.log('[WS] Will reconnect in 2s...');
+                this.reconnectTimeout = setTimeout(() => this.startRealConnection(config), 2000);
             }
         };
 
         this.ws.onerror = (err) => {
-            console.error('[WS] Error', err);
+            console.error('[WS] ❌ Error occurred:', err);
         };
     }
 
     private subscribe(symbol: string) {
-        if (!this.ws || this.ws.readyState !== WebSocket.OPEN) return;
+        if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
+            console.warn('[WS] Cannot subscribe, socket not open');
+            return;
+        }
 
         const msg = {
             method: "subscribe",
             params: {
                 channel: "book",
                 symbol: [symbol],
-                depth: 100, // Kraken V2 allows depth selection
+                depth: 10,
                 snapshot: true
             }
         };
+
+        console.log('[WS] >>> Sending subscription:', JSON.stringify(msg, null, 2));
         this.ws.send(JSON.stringify(msg));
     }
 
     private startHeartbeat() {
-        // V2 sends heartbeats automatically, but we can also ping.
-        // We'll just listen for now. Implement ping if needed for keep-alive.
+        // V2 sends heartbeats automatically
     }
 
     private stopHeartbeat() {
@@ -91,8 +93,7 @@ export class WebSocketService {
     }
 
     private startSimulation() {
-        console.log('[WS] Starting simulation');
-        // Generate initial snapshot
+        console.log('[WS] Starting simulation mode');
         const initialBids = [];
         const initialAsks = [];
         for (let i = 0; i < 50; i++) {
@@ -113,7 +114,6 @@ export class WebSocketService {
         this.onMessageCallback(snapshotMsg);
 
         this.simulationInterval = setInterval(() => {
-            // Random updates
             const isBid = Math.random() > 0.5;
             const basePrice = 50000;
             const spread = 0.5;
@@ -122,7 +122,7 @@ export class WebSocketService {
                 ? basePrice - Math.floor(Math.random() * 50) * 5
                 : basePrice + spread + Math.floor(Math.random() * 50) * 5;
 
-            const volume = Math.random() > 0.2 ? Math.random() * 2 : 0; // 20% chance of delete (vol 0)
+            const volume = Math.random() > 0.2 ? Math.random() * 2 : 0;
 
             const updateMsg = {
                 channel: 'book',
@@ -136,7 +136,7 @@ export class WebSocketService {
             };
 
             this.onMessageCallback(updateMsg);
-        }, 50); // High frequency updates
+        }, 200);
     }
 
     cleanup() {

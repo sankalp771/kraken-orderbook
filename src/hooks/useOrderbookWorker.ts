@@ -2,43 +2,52 @@ import { useEffect, useRef } from 'react';
 import { useOrderbookStore } from '@/store/orderbook-store';
 import { WorkerMessage, MainMessage } from '@/types/orderbook';
 
-export function useOrderbookWorker(symbol: string = 'BTC/USD', useSimulated: boolean = true) {
+// STABLE HOOK - only re-runs when symbol changes
+export function useOrderbookWorker(symbol: string, useSimulated: boolean = false) {
     const workerRef = useRef<Worker | null>(null);
-    const handleTick = useOrderbookStore((state) => state.handleTick);
-    const setConnectionStatus = useOrderbookStore((state) => state.setConnectionStatus);
+
+    // Get store actions (these are stable references)
+    const setSnapshot = useOrderbookStore.getState().setSnapshot;
+    const setConnectionStatus = useOrderbookStore.getState().setConnectionStatus;
 
     useEffect(() => {
-        // Instantiate worker
-        workerRef.current = new Worker(new URL('../workers/orderbook.worker.ts', import.meta.url), {
-            type: 'module',
-        });
+        console.log(`[useOrderbookWorker] Initializing for ${symbol} (simulated: ${useSimulated})`);
 
-        console.log('[Hook] Worker instantiated');
+        // Create worker
+        workerRef.current = new Worker(
+            new URL('../workers/orderbook.worker.ts', import.meta.url),
+            { type: 'module' }
+        );
 
+        // Handle messages from worker
         workerRef.current.onmessage = (event: MessageEvent<MainMessage>) => {
             const { type, payload } = event.data;
 
             if (type === 'TICK') {
-                handleTick(payload);
-                setConnectionStatus('connected'); // Infer connection from data flow
+                // Use store action directly - no state updates in this component
+                setSnapshot(payload);
+                setConnectionStatus('connected');
             } else if (type === 'STATUS') {
                 setConnectionStatus(payload.connection);
             }
         };
 
         // Initialize connection
-        workerRef.current.postMessage({
+        const initMessage: WorkerMessage = {
             type: 'INIT_CONNECTION',
             payload: { symbol, useSimulated }
-        } as WorkerMessage);
+        };
+        workerRef.current.postMessage(initMessage);
 
+        // Cleanup on unmount or symbol change
         return () => {
-            console.log('[Hook] Cleaning up worker');
+            console.log(`[useOrderbookWorker] Cleaning up for ${symbol}`);
             if (workerRef.current) {
                 workerRef.current.terminate();
+                workerRef.current = null;
             }
         };
-    }, [symbol, useSimulated, handleTick, setConnectionStatus]);
+    }, [symbol, useSimulated]); // ONLY these dependencies
 
     return workerRef.current;
 }

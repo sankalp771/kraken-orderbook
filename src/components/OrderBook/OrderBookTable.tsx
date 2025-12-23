@@ -1,59 +1,80 @@
-import { useRef, useEffect } from 'react';
+import React, { useMemo } from 'react';
 import { useOrderbookStore } from '@/store/orderbook-store';
-import OrderBookRow from './OrderBookRow';
-import './OrderBookTable.css';
+import OrderbookRow from './OrderbookRow';
+import '@/styles/orderbook.css';
 
-// Simple virtualized list constants
-const ROW_HEIGHT = 24; // px
-const VISIBLE_ROWS = 15; // fallback
+const OrderbookTable: React.FC = () => {
+    const snapshot = useOrderbookStore(state => state.latestSnapshot);
 
-export default function OrderBookTable() {
-    const latestTick = useOrderbookStore(state => state.latestTick);
+    // Limit to what fits on screen (approx 12-15 levels per side)
+    const { asks, bids, spread, spreadPercent } = useMemo(() => {
+        if (!snapshot) {
+            return { asks: [], bids: [], spread: 0, spreadPercent: 0 };
+        }
 
-    if (!latestTick) {
-        return <div className="p-4 text-center text-gray-500">Waiting for data...</div>;
-    }
+        const MAX_LEVELS = 15; // Show only what fits without scrolling
 
-    const { bids, asks, spread, spreadPercent, lastPrice } = latestTick;
+        return {
+            asks: snapshot.asks.slice(0, MAX_LEVELS).reverse(),
+            bids: snapshot.bids.slice(0, MAX_LEVELS),
+            spread: snapshot.spread,
+            spreadPercent: snapshot.spreadPercent
+        };
+    }, [snapshot]);
 
-    // We take top N asks (lowest price) but display them Reverse order (High -> Low) visually for standard OB feeling
-    // Asks: [100, 101, 102] -> Render [102, 101, 100] (so 100 is close to spread)
-    const asksToRender = [...asks].reverse();
-
-    // Bids: [99, 98, 97] -> Render [99, 98, 97] (so 99 is close to spread)
-    const bidsToRender = bids;
-
-    return (
-        <div className="w-full max-w-md bg-[#1e1e1e] border border-[#333] rounded-lg overflow-hidden flex flex-col h-[600px]">
-            {/* Header */}
-            <div className="grid grid-cols-3 text-xs text-gray-500 p-2 border-b border-[#333] uppercase">
-                <div className="text-left pl-2">Price (USD)</div>
-                <div className="text-right">Size</div>
-                <div className="text-right pr-2">Total</div>
-            </div>
-
-            {/* Asks (Red) - Scrollable container if we want full depth, but for now fixed list */}
-            <div className="flex-1 overflow-hidden flex flex-col justify-end">
-                {asksToRender.map((level) => (
-                    <OrderBookRow key={level.price} level={level} side="ask" />
-                ))}
-            </div>
-
-            {/* Spread Widget */}
-            <div className="spread-container flex justify-between px-4">
-                <span className="text-gray-400">{spread.toFixed(2)} ({spreadPercent.toFixed(2)}%)</span>
-                <div className="flex items-center gap-1">
-                    <span className="text-white font-bold">{lastPrice.toFixed(2)}</span>
-                    {/* Direction arrow placeholder */}
+    if (!snapshot) {
+        return (
+            <div className="orderbook-container">
+                <div className="flex items-center justify-center h-full text-gray-500 text-sm">
+                    Connecting...
                 </div>
             </div>
+        );
+    }
 
-            {/* Bids (Green) */}
-            <div className="flex-1 overflow-hidden">
-                {bidsToRender.map((level) => (
-                    <OrderBookRow key={level.price} level={level} side="bid" />
-                ))}
+    return (
+        <div className="orderbook-container">
+            {/* Header */}
+            <div className="orderbook-header">
+                <div className="orderbook-header-col">Price</div>
+                <div className="orderbook-header-col">Size</div>
+                <div className="orderbook-header-col">Total</div>
+            </div>
+
+            <div className="orderbook-content">
+                {/* Asks (Red) */}
+                <div className="orderbook-asks-section">
+                    {asks.map((level, idx) => (
+                        <OrderbookRow
+                            key={`ask-${level.price}-${idx}`}
+                            level={level}
+                            side="ask"
+                        />
+                    ))}
+                </div>
+
+                {/* Spread */}
+                <div className="orderbook-spread">
+                    <span className="spread-label">Spread</span>
+                    <span className="spread-value">
+                        {spread.toFixed(1)}
+                        <span className="spread-percent ml-1">({spreadPercent.toFixed(2)}%)</span>
+                    </span>
+                </div>
+
+                {/* Bids (Green) */}
+                <div className="orderbook-bids-section">
+                    {bids.map((level, idx) => (
+                        <OrderbookRow
+                            key={`bid-${level.price}-${idx}`}
+                            level={level}
+                            side="bid"
+                        />
+                    ))}
+                </div>
             </div>
         </div>
     );
-}
+};
+
+export default React.memo(OrderbookTable);

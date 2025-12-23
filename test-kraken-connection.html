@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Kraken API v2 Connection Test</title>
+    <style>
+        body {
+            font-family: monospace;
+            background: #000;
+            color: #0f0;
+            padding: 20px;
+        }
+
+        .status {
+            color: #ff0;
+        }
+
+        .error {
+            color: #f00;
+        }
+
+        .success {
+            color: #0f0;
+        }
+
+        .data {
+            color: #0ff;
+            white-space: pre;
+        }
+
+        button {
+            background: #0f0;
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            margin: 10px 5px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>🔌 Kraken API v2 WebSocket Connection Test</h1>
+    <div id="log"></div>
+    <button onclick="testRealAPI()">Test REAL Kraken API</button>
+    <button onclick="clearLog()">Clear Log</button>
+
+    <script>
+        const log = (msg, className = '') => {
+            const div = document.createElement('div');
+            div.className = className;
+            div.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+            document.getElementById('log').appendChild(div);
+            console.log(msg);
+        };
+
+        const clearLog = () => {
+            document.getElementById('log').innerHTML = '';
+        };
+
+        function testRealAPI() {
+            log('🚀 Connecting to Kraken v2 WebSocket...', 'status');
+            const ws = new WebSocket('wss://ws.kraken.com/v2');
+
+            let messageCount = 0;
+            let snapshotReceived = false;
+            let updateCount = 0;
+
+            ws.onopen = () => {
+                log('✅ WebSocket OPENED', 'success');
+
+                // Subscribe to BTC/USD orderbook
+                const subscribeMsg = {
+                    method: "subscribe",
+                    params: {
+                        channel: "book",
+                        symbol: ["BTC/USD"],
+                        depth: 10,
+                        snapshot: true
+                    }
+                };
+
+                log('📤 Sending subscription: ' + JSON.stringify(subscribeMsg), 'status');
+                ws.send(JSON.stringify(subscribeMsg));
+            };
+
+            ws.onmessage = (event) => {
+                messageCount++;
+                const data = JSON.parse(event.data);
+
+                // Log first few messages
+                if (messageCount <= 5) {
+                    log(`📨 Message #${messageCount}: ${JSON.stringify(data).substring(0, 200)}...`, 'data');
+                }
+
+                // Check for snapshot
+                if (data.channel === 'book' && data.type === 'snapshot') {
+                    snapshotReceived = true;
+                    const bookData = data.data[0];
+                    log(`✅ SNAPSHOT RECEIVED!`, 'success');
+                    log(`   Symbol: ${bookData.symbol}`, 'success');
+                    log(`   Bids: ${bookData.bids.length} levels`, 'success');
+                    log(`   Asks: ${bookData.asks.length} levels`, 'success');
+                    log(`   Best Bid: ${bookData.bids[0].price} (${bookData.bids[0].qty})`, 'success');
+                    log(`   Best Ask: ${bookData.asks[0].price} (${bookData.asks[0].qty})`, 'success');
+                    log(`   Spread: ${(bookData.asks[0].price - bookData.bids[0].price).toFixed(2)}`, 'success');
+                }
+
+                // Check for updates
+                if (data.channel === 'book' && data.type === 'update') {
+                    updateCount++;
+                    if (updateCount === 1) {
+                        log(`✅ First UPDATE received!`, 'success');
+                    }
+                    if (updateCount === 10) {
+                        log(`📊 Received ${updateCount} updates so far...`, 'status');
+                    }
+                }
+
+                // Status after 20 messages
+                if (messageCount === 20) {
+                    log(`\n📊 CONNECTION STATUS SUMMARY:`, 'status');
+                    log(`   Total messages: ${messageCount}`, 'status');
+                    log(`   Snapshot received: ${snapshotReceived ? 'YES ✅' : 'NO ❌'}`, snapshotReceived ? 'success' : 'error');
+                    log(`   Updates received: ${updateCount}`, 'status');
+                    log(`\n🎯 VERDICT: ${snapshotReceived && updateCount > 0 ? 'API CONNECTION WORKING! ✅' : 'Issues detected ❌'}`, snapshotReceived && updateCount > 0 ? 'success' : 'error');
+
+                    // Auto-close after test
+                    setTimeout(() => {
+                        log('\n🛑 Closing connection (test complete)', 'status');
+                        ws.close();
+                    }, 2000);
+                }
+            };
+
+            ws.onerror = (error) => {
+                log('❌ WebSocket ERROR: ' + error, 'error');
+            };
+
+            ws.onclose = () => {
+                log('🔌 WebSocket CLOSED', 'status');
+                log(`\nFinal stats: ${messageCount} messages, ${updateCount} updates`, 'status');
+            };
+        }
+    </script>
+</body>
+
+</html>

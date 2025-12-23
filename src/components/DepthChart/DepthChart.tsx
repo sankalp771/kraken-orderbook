@@ -31,23 +31,33 @@ export default function DepthChart() {
 
             ctx.clearRect(0, 0, width, height);
 
-            // 1. Determine Scale Domains
-            // We need the min and max price across the visible range
-            // and the max cumulative volume to scale Y.
-
             if (bids.length === 0 || asks.length === 0) return;
 
-            const maxBidVol = bids[bids.length - 1].total;
-            const maxAskVol = asks[asks.length - 1].total;
+            // Limit depth to reasonable range (e.g., top 50 levels each side)
+            const DEPTH_LIMIT = Math.min(50, Math.min(bids.length, asks.length));
+
+            // Calculate cumulative volumes if not already present
+            const processedBids = bids.slice(0, DEPTH_LIMIT).map((bid, i) => ({
+                price: bid.price,
+                volume: bid.volume,
+                total: bid.total ?? bids.slice(0, i + 1).reduce((sum, b) => sum + b.volume, 0)
+            }));
+
+            const processedAsks = asks.slice(0, DEPTH_LIMIT).map((ask, i) => ({
+                price: ask.price,
+                volume: ask.volume,
+                total: ask.total ?? asks.slice(0, i + 1).reduce((sum, a) => sum + a.volume, 0)
+            }));
+
+            const maxBidVol = processedBids[processedBids.length - 1].total;
+            const maxAskVol = processedAsks[processedAsks.length - 1].total;
             const maxVol = Math.max(maxBidVol, maxAskVol);
 
-            // Price Range needs to be symmetric or full?
-            // Let's take the lowest bid and highest ask.
-            const minPrice = bids[bids.length - 1].price;
-            const maxPrice = asks[asks.length - 1].price;
+            const minPrice = processedBids[processedBids.length - 1].price;
+            const maxPrice = processedAsks[processedAsks.length - 1].price;
             const priceRange = maxPrice - minPrice;
 
-            if (priceRange === 0) return;
+            if (priceRange === 0 || maxVol === 0) return;
 
             // Coordinate Helpers
             const getX = (price: number) => {
@@ -55,83 +65,100 @@ export default function DepthChart() {
             };
 
             const getY = (vol: number) => {
-                // Y=0 is bottom, but canvas Y=0 is top.
-                // We want height - (vol/maxVol * height)
-                // Add minimal padding so chart doesn't touch top
-                const padding = 10;
-                const availableHeight = height - padding;
-                return height - ((vol / maxVol) * availableHeight);
+                // Use square root scaling for better visual distribution
+                // This prevents the chart from being too compressed at the bottom
+                const paddingTop = 20;
+                const paddingBottom = 10;
+                const availableHeight = height - paddingTop - paddingBottom;
+
+                // Square root scaling makes small volumes more visible
+                const normalizedVol = Math.sqrt(vol / maxVol);
+                return height - paddingBottom - (normalizedVol * availableHeight);
             };
 
-            // 2. Draw Bids (Green area)
-            // Bids go from High Price (Tip) down to Low Price.
-            // On X axis: Tip (Center-ish) -> Low (Left)
-            // We need to sort by price ascending for drawing the polygon left-to-right correctly?
-            // Bids array is sorted High->Low. 
-            // Let's reverse to draw from Left (Low Price) to Right (Tip).
-
-            ctx.fillStyle = 'rgba(0, 230, 118, 0.2)'; // Green transparent
+            // Draw Bids (Green area) with STEP style
+            ctx.fillStyle = 'rgba(0, 230, 118, 0.2)';
             ctx.strokeStyle = '#00e676';
             ctx.lineWidth = 2;
 
             ctx.beginPath();
 
-            // Start at bottom-left corner of the bid section
-            // Lowest Bid Price
-            const startBidPrice = bids[bids.length - 1].price;
+            // Start at bottom-left
+            const startBidPrice = processedBids[processedBids.length - 1].price;
             ctx.moveTo(getX(startBidPrice), height);
 
-            // Iterate Bids (Low -> High)
-            for (let i = bids.length - 1; i >= 0; i--) {
-                const p = bids[i].price;
-                const v = bids[i].total;
-                ctx.lineTo(getX(p), getY(v));
+            // Draw steps from Low Price -> High Price (right to left in bid data)
+            for (let i = processedBids.length - 1; i >= 0; i--) {
+                const curr = processedBids[i];
+                const currX = getX(curr.price);
+                const currY = getY(curr.total);
+
+                // Horizontal line to current price at current volume
+                ctx.lineTo(currX, currY);
+
+                // If not the last point, draw vertical line to next volume level
+                if (i > 0) {
+                    const nextY = getY(processedBids[i - 1].total);
+                    ctx.lineTo(currX, nextY);
+                }
             }
 
-            // Drop to bottom at the highest bid price (Tip)
-            const tipBidPrice = bids[0].price; // Highest bid
+            // Close path at bottom-right of bid area
+            const tipBidPrice = processedBids[0].price;
             ctx.lineTo(getX(tipBidPrice), height);
             ctx.closePath();
             ctx.fill();
             ctx.stroke();
 
-            // 3. Draw Asks (Red area)
-            // Asks are Low -> High. Draw from Tip (Leftish) -> Right (High)
-
-            ctx.fillStyle = 'rgba(255, 82, 82, 0.2)'; // Red transparent
+            // Draw Asks (Red area) with STEP style
+            ctx.fillStyle = 'rgba(255, 82, 82, 0.2)';
             ctx.strokeStyle = '#ff5252';
+            ctx.lineWidth = 2;
 
             ctx.beginPath();
 
-            // Start at bottom at Tip Price
-            const tipAskPrice = asks[0].price; // Lowest Ask
+            // Start at bottom at lowest ask price
+            const tipAskPrice = processedAsks[0].price;
             ctx.moveTo(getX(tipAskPrice), height);
 
-            // Iterate Asks (Low -> High)
-            for (let i = 0; i < asks.length; i++) {
-                const p = asks[i].price;
-                const v = asks[i].total;
-                ctx.lineTo(getX(p), getY(v));
+            // Draw steps from Low Price -> High Price (left to right in ask data)
+            for (let i = 0; i < processedAsks.length; i++) {
+                const curr = processedAsks[i];
+                const currX = getX(curr.price);
+                const currY = getY(curr.total);
+
+                // Vertical line up to current volume
+                if (i === 0) {
+                    ctx.lineTo(currX, currY);
+                } else {
+                    const prevY = getY(processedAsks[i - 1].total);
+                    ctx.lineTo(currX, prevY);
+                    ctx.lineTo(currX, currY);
+                }
             }
 
-            // Drop to bottom at highest Ask Price
-            const maxAskPrice = asks[asks.length - 1].price;
+            // Horizontal line to the right edge
+            const maxAskPrice = processedAsks[processedAsks.length - 1].price;
+            const lastY = getY(processedAsks[processedAsks.length - 1].total);
+            ctx.lineTo(getX(maxAskPrice), lastY);
+
+            // Close path at bottom-right
             ctx.lineTo(getX(maxAskPrice), height);
             ctx.closePath();
             ctx.fill();
             ctx.stroke();
 
-            // 4. Draw Mid-Price Line (Optional)
-            /* 
-            const midX = getX((tipAskPrice + tipBidPrice) / 2);
-            ctx.strokeStyle = '#ffffff';
+            // Draw Mid-Price Line (Optional but recommended)
+            const midPrice = (tipAskPrice + tipBidPrice) / 2;
+            const midX = getX(midPrice);
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+            ctx.lineWidth = 1;
             ctx.setLineDash([5, 5]);
             ctx.beginPath();
             ctx.moveTo(midX, 0);
             ctx.lineTo(midX, height);
             ctx.stroke();
             ctx.setLineDash([]);
-            */
         };
 
         draw();
