@@ -50,8 +50,7 @@ The video walks through:
 ## 📸 Screenshots
 
 ### Live Orderbook & Time Travel Panel & Market Depth
-![Time Travel Panel](<img width="1919" height="910" alt="Screenshot 2025-12-24 212947" src="https://github.com/user-attachments/assets/53496cb5-05fd-4c53-a750-ef9a314dc9e9" />
-)
+![Time Travel Panel](<Screenshot 2025-12-24 212947.png>)
 
 
 ## ⏳ How Time Travel Works
