@@ -46,5 +46,7 @@ The **Spread** is the gap between:
 $$ \text{Spread} = \text{Best Ask} - \text{Best Bid} $$
 $$ \text{Spread \%} = (\text{Spread} / \text{Best Ask}) \times 100 $$
 
+![Formula Picture](2017d0eb-559b-453d-b703-e50331fc803a.png)
+
 A tight spread (near 0.01%) indicates a highly liquid, efficient market. A wide spread indicates low liquidity or high volatility.
 Our visualizer highlights this "No Man's Land" in the center of the chart.
