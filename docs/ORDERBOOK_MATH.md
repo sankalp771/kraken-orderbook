@@ -30,8 +30,8 @@ In crypto markets, liquidity is often uneven.
 If we use a linear Y-axis, the 500 BTC wall will be huge, and the 0.5 BTC orders will look like a flat line (0 pixels high). You lose all detail near the spread—where trading actually happens.
 
 ### The Log-Scale Solution
-We apply a logarithmic transform to the Y-axis (Volume).
-$$ Y = \log_{10}(\text{Volume}) $$
+
+![Log Scale](<log_scale.png>)
 
 This compresses the massive outliers and expands the small values.
 **Result:** You can see BOTH the massive whale walls far away AND the granular microstructure near the current price.
@@ -46,7 +46,7 @@ The **Spread** is the gap between:
 $$ \text{Spread} = \text{Best Ask} - \text{Best Bid} $$
 $$ \text{Spread \%} = (\text{Spread} / \text{Best Ask}) \times 100 $$
 
-![Formula Picture](2017d0eb-559b-453d-b703-e50331fc803a.png)
+![Formula Picture](bidask_formula.png)
 
 A tight spread (near 0.01%) indicates a highly liquid, efficient market. A wide spread indicates low liquidity or high volatility.
 Our visualizer highlights this "No Man's Land" in the center of the chart.
