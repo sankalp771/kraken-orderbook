@@ -1,4 +1,4 @@
-# 🏆 Kraken Orderbook Visualizer with Time Travel
+## 🏆 Kraken Orderbook Visualizer with Time Travel
 
 A high-performance web-based orderbook visualizer built on Kraken’s WebSocket API, enabling real-time market depth analysis and historical time travel. Built for **Kraken Forge Hackathon (Track #2)**.
 
